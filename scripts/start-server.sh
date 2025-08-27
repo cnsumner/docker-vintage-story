@@ -1,9 +1,11 @@
 #!/bin/bash
 CUR_V="$(find ${DATA_DIR} -name installed-* | cut -d '-' -f2-)"
+# Trim whitespace from STATIC_V
+STATIC_V="$(echo "${STATIC_V}" | xargs)"
 if [ ! -z "${STATIC_V}" ] && [ "${CUR_V}" != "${STATIC_V}" ]; then
   echo "---Static version: ${STATIC_V} set!---"
   DL_URL="$(wget -qO- http://api.vintagestory.at/${VS_CHANNEL}.json | jq -r --arg version "${STATIC_V}" '.[$version].linuxserver.urls.cdn')"
-  LAT_V="${STATIC_V}"
+  LAT_V="$(echo "${STATIC_V}" | xargs)"
 elif [ ! -z "${STATIC_V}" ] && [ ! -z "${CUR_V}" ] && [ "${CUR_V}" == "${STATIC_V}" ]; then
   echo "---Static version: ${STATIC_V} locally found!---"
   LAT_V="${CUR_V}"
@@ -11,6 +13,7 @@ elif [ ! -z "${STATIC_V}" ] && [ ! -z "${CUR_V}" ] && [ "${CUR_V}" == "${STATIC_
 else
   JSON="$(wget -qO- http://api.vintagestory.at/${VS_CHANNEL}.json)"
   LAT_V="$(echo "${JSON}" | jq -r 'keys_unsorted[]' | head -1)"
+  LAT_V="$(echo "${LAT_V}" | xargs)"
   DL_URL="$(echo "${JSON}" | jq -r --arg version "${LAT_V}" '.[$version].linuxserver.urls.cdn')"
 fi
 if [ -z "${DL_URL}" ]; then
@@ -25,8 +28,13 @@ fi
 echo "---Version Check---"
 if [ -z "${CUR_V}" ]; then
   echo "---Vintage Story not found, downloading...---"
+  echo "DATA_DIR is: ${DATA_DIR}"
   cd ${DATA_DIR}
   rm -f ${DATA_DIR}/vintagestory-*
+  if [ -z "${DL_URL}" ] || [ "${DL_URL}" = "null" ]; then
+    echo "---Download URL is invalid: '${DL_URL}'. Aborting.---"
+    exit 1
+  fi
   if wget -q -nc --show-progress --progress=bar:force:noscroll -O ${DATA_DIR}/vintagestory-${LAT_V} "${DL_URL}" ; then
     echo "---Successfully downloaded Vintage Story v${LAT_V}---"
   else
