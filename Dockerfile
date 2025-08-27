@@ -3,11 +3,14 @@ FROM ich777/mono-baseimage
 LABEL org.opencontainers.image.authors="admin@minenet.at"
 LABEL org.opencontainers.image.source="https://github.com/ich777/docker-vintage-story"
 
-RUN wget -q -O /tmp/packages-microsoft-prod.deb https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb && \
-	dpkg -i /tmp/packages-microsoft-prod.deb && \
-	apt-get update && \
-	apt-get -y install --no-install-recommends curl screen jq dotnet-runtime-8.0 && \
-	rm -rf /var/lib/apt/lists/* /tmp/packages-microsoft-prod.deb
+RUN apt-get install -y gpg wget && \
+    wget https://packages.microsoft.com/keys/microsoft.asc && \
+    cat microsoft.asc | gpg --dearmor -o microsoft.asc.gpg && \
+    wget https://packages.microsoft.com/config/debian/12/prod.list && \
+    mv prod.list /etc/apt/sources.list.d/microsoft-prod.list && \
+    mv microsoft.asc.gpg $(cat /etc/apt/sources.list.d/microsoft-prod.list | grep -oP "(?<=signed-by=).*(?=\])") && \
+    apt-get update && \
+    apt-get -y install --no-install-recommends dotnet-runtime-8.0
 
 ENV DATA_DIR="/vintagestory"
 ENV VS_CHANNEL="stable"
