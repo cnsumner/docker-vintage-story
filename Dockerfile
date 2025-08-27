@@ -7,7 +7,7 @@ RUN export TZ=Europe/Rome && \
     apt-get update && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo $TZ > /etc/timezone && \
-    apt-get -y install --reinstall ca-certificates && \
+    apt-get -y install --no-install-recommends wget jq screen ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 ENV DATA_DIR="/vintagestory"
