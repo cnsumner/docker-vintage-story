@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 CUR_V="$(find ${DATA_DIR} -name installed-* | cut -d '-' -f2-)"
 # Trim whitespace from STATIC_V
 STATIC_V="$(echo "${STATIC_V}" | xargs)"
